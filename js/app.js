@@ -6,7 +6,7 @@ let downloadUrl = '';
 // إعدادات API - عدل هذا الرابط عند النشر
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? ''  // localhost: استخدم المسار النسبي
-    : 'http://82.25.116.131:8080';  // GitHub Pages: استخدم الخادم البعيد
+    : 'https://ascii-advertising-asian-respected.trycloudflare.com';  // GitHub Pages: استخدم الخادم البعيد (HTTPS)
 
 // عناصر DOM
 const uploadArea = document.getElementById('uploadArea');
