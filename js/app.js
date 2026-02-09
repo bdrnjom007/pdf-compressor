@@ -139,10 +139,17 @@ compressBtn.addEventListener('click', async () => {
         }, 500);
 
         // إرسال الطلب للخادم
-        const response = await fetch(`${API_BASE_URL}/api/compress`, {
+        const url = `${API_BASE_URL}/api/compress`;
+        console.log('Sending request to:', url);
+        console.log('API_BASE_URL:', API_BASE_URL);
+
+        const response = await fetch(url, {
             method: 'POST',
             body: formData
         });
+
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
 
         const result = await response.json();
 
