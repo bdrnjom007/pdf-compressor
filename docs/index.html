@@ -3,131 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ضاغط PDF - ضغط ملفات PDF بسهولة</title>
+    <title>أدوات PDF - ضغط ودمج ملفات PDF</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- إعلان Google AdSense - علوي -->
+    <div class="ad-container ad-top">
+        <!-- ضع كود AdSense هنا -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+    </div>
+
     <div class="container">
         <header>
-            <h1>ضاغط PDF</h1>
-            <p class="subtitle">ضغط ملفات PDF بسهولة وسرعة</p>
+            <h1>أدوات PDF</h1>
+            <p class="subtitle">ضغط ودمج ملفات PDF بسهولة وسرعة</p>
         </header>
 
+        <!-- تبويبات الأدوات -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="compress">
+                🗜️ ضغط PDF
+            </button>
+            <button class="tab-btn" data-tab="merge">
+                🔗 دمج PDF
+            </button>
+        </div>
+
         <main>
-            <!-- منطقة رفع الملفات -->
-            <div class="upload-section" id="uploadSection">
-                <div class="upload-area" id="uploadArea">
-                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    <h3>اسحب وأفلت ملف PDF هنا</h3>
-                    <p>أو</p>
-                    <button class="btn btn-primary" id="selectFileBtn">
-                        اختر ملف PDF
-                    </button>
-                    <input type="file" id="fileInput" accept=".pdf" hidden>
-                    <p class="file-size-limit">الحد الأقصى: 50 ميجابايت</p>
-                </div>
-            </div>
-
-            <!-- معلومات الملف المختار -->
-            <div class="file-info" id="fileInfo" style="display: none;">
-                <div class="file-details">
-                    <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                    <div class="file-info-text">
-                        <h4 id="fileName">اسم الملف.pdf</h4>
-                        <p id="fileSize">2.5 ميجابايت</p>
-                    </div>
-                    <button class="btn btn-danger" id="removeFileBtn">✕</button>
-                </div>
-            </div>
-
-            <!-- خيارات الضغط -->
-            <div class="compression-options" id="compressionOptions" style="display: none;">
-                <h3>اختر مستوى الضغط:</h3>
-                <div class="quality-buttons">
-                    <button class="quality-btn" data-quality="high">
-                        <div class="quality-icon">🎯</div>
-                        <div class="quality-info">
-                            <h4>جودة عالية</h4>
-                            <p>ضغط خفيف - الحفاظ على الجودة</p>
-                        </div>
-                    </button>
-                    <button class="quality-btn active" data-quality="medium">
-                        <div class="quality-icon">⚖️</div>
-                        <div class="quality-info">
-                            <h4>جودة متوسطة</h4>
-                            <p>توازن بين الحجم والجودة</p>
-                        </div>
-                    </button>
-                    <button class="quality-btn" data-quality="low">
-                        <div class="quality-icon">📉</div>
-                        <div class="quality-info">
-                            <h4>جودة منخفضة</h4>
-                            <p>ضغط قوي - أقل حجم</p>
-                        </div>
-                    </button>
-                </div>
-                <button class="btn btn-compress" id="compressBtn">
-                    <span>ضغط الملف</span>
-                </button>
-            </div>
-
-            <!-- تقدم الضغط -->
-            <div class="progress-section" id="progressSection" style="display: none;">
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <p class="progress-text" id="progressText">جاري الضغط... 0%</p>
-                </div>
-            </div>
-
-            <!-- النتيجة -->
-            <div class="result-section" id="resultSection" style="display: none;">
-                <div class="result-card">
-                    <div class="success-icon">✓</div>
-                    <h3>تم الضغط بنجاح!</h3>
-
-                    <div class="size-comparison">
-                        <div class="size-item">
-                            <p class="size-label">الحجم الأصلي</p>
-                            <p class="size-value" id="originalSize">2.5 MB</p>
-                        </div>
-                        <div class="size-arrow">→</div>
-                        <div class="size-item">
-                            <p class="size-label">الحجم بعد الضغط</p>
-                            <p class="size-value compressed" id="compressedSize">1.8 MB</p>
-                        </div>
-                    </div>
-
-                    <div class="compression-ratio">
-                        <p>تم توفير <span id="savedPercentage">28%</span> من الحجم</p>
-                    </div>
-
-                    <div class="result-actions">
-                        <button class="btn btn-primary" id="downloadBtn">
-                            <span>⬇ تحميل الملف المضغوط</span>
+            <!-- ==================== قسم الضغط ==================== -->
+            <div class="tab-content active" id="compressTab">
+                <!-- منطقة رفع الملفات -->
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <h3>اسحب وأفلت ملف PDF هنا</h3>
+                        <p>أو</p>
+                        <button class="btn btn-primary" id="selectFileBtn">
+                            اختر ملف PDF
                         </button>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                        <p class="file-size-limit">الحد الأقصى: 50 ميجابايت</p>
+                    </div>
+                </div>
+
+                <!-- معلومات الملف المختار -->
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <div class="file-details">
+                        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <div class="file-info-text">
+                            <h4 id="fileName">اسم الملف.pdf</h4>
+                            <p id="fileSize">2.5 ميجابايت</p>
+                        </div>
+                        <button class="btn btn-danger" id="removeFileBtn">✕</button>
+                    </div>
+                </div>
+
+                <!-- خيارات الضغط -->
+                <div class="compression-options" id="compressionOptions" style="display: none;">
+                    <h3>اختر مستوى الضغط:</h3>
+                    <div class="quality-buttons">
+                        <button class="quality-btn" data-quality="high">
+                            <div class="quality-icon">🎯</div>
+                            <div class="quality-info">
+                                <h4>جودة عالية</h4>
+                                <p>ضغط خفيف - الحفاظ على الجودة</p>
+                            </div>
+                        </button>
+                        <button class="quality-btn active" data-quality="medium">
+                            <div class="quality-icon">⚖️</div>
+                            <div class="quality-info">
+                                <h4>جودة متوسطة</h4>
+                                <p>توازن بين الحجم والجودة</p>
+                            </div>
+                        </button>
+                        <button class="quality-btn" data-quality="low">
+                            <div class="quality-icon">📉</div>
+                            <div class="quality-info">
+                                <h4>جودة منخفضة</h4>
+                                <p>ضغط قوي - أقل حجم</p>
+                            </div>
+                        </button>
+                    </div>
+                    <button class="btn btn-compress" id="compressBtn">
+                        <span>ضغط الملف</span>
+                    </button>
+                </div>
+
+                <!-- تقدم الضغط -->
+                <div class="progress-section" id="progressSection" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">جاري الضغط... 0%</p>
+                    </div>
+                </div>
+
+                <!-- النتيجة -->
+                <div class="result-section" id="resultSection" style="display: none;">
+                    <div class="result-card">
+                        <div class="success-icon">✓</div>
+                        <h3>تم الضغط بنجاح!</h3>
+
+                        <div class="size-comparison">
+                            <div class="size-item">
+                                <p>الحجم الأصلي</p>
+                                <strong id="originalSize">2.5 MB</strong>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div class="size-item">
+                                <p>الحجم بعد الضغط</p>
+                                <strong id="compressedSize">1.8 MB</strong>
+                            </div>
+                        </div>
+
+                        <div class="saved-percentage">
+                            تم توفير <span id="savedPercentage">28%</span> من الحجم
+                        </div>
+
+                        <button class="btn btn-success" id="downloadBtn">
+                            ⬇ تحميل الملف المضغوط
+                        </button>
+
                         <button class="btn btn-secondary" id="resetBtn">
                             ضغط ملف آخر
+                        </button>
+                    </div>
+
+                    <p class="cleanup-notice">
+                        جميع الملفات تُحذف تلقائياً بعد 24 ساعة
+                        <br>
+                        🔒 معالجة آمنة ومحمية
+                    </p>
+                </div>
+            </div>
+
+            <!-- ==================== قسم الدمج ==================== -->
+            <div class="tab-content" id="mergeTab">
+                <div class="merge-section">
+                    <div class="upload-area" id="mergeUploadArea">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <h3>اسحب وأفلت ملفات PDF هنا</h3>
+                        <p>أو</p>
+                        <button class="btn btn-primary" id="selectMergeFilesBtn">
+                            اختر ملفات PDF (متعددة)
+                        </button>
+                        <input type="file" id="mergeFilesInput" accept=".pdf" multiple hidden>
+                        <p class="file-size-limit">يمكنك اختيار أكثر من ملف</p>
+                    </div>
+                </div>
+
+                <!-- قائمة الملفات المختارة للدمج -->
+                <div class="merge-files-list" id="mergeFilesList" style="display: none;">
+                    <h3>ملفاتك (<span id="filesCount">0</span> ملف):</h3>
+                    <div class="files-list" id="filesListContainer">
+                        <!-- الملفات ستظهر هنا -->
+                    </div>
+
+                    <div class="merge-actions">
+                        <button class="btn btn-compress" id="mergeBtn">
+                            🔗 دمج الملفات
+                        </button>
+                        <button class="btn btn-secondary" id="clearMergeFilesBtn">
+                            مسح الكل
+                        </button>
+                    </div>
+                </div>
+
+                <!-- تقدم الدمج -->
+                <div class="progress-section" id="mergeProgressSection" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="mergeProgressFill"></div>
+                        </div>
+                        <p class="progress-text" id="mergeProgressText">جاري الدمج... 0%</p>
+                    </div>
+                </div>
+
+                <!-- نتيجة الدمج -->
+                <div class="result-section" id="mergeResultSection" style="display: none;">
+                    <div class="result-card">
+                        <div class="success-icon">✓</div>
+                        <h3>تم الدمج بنجاح!</h3>
+
+                        <div class="merge-info">
+                            <p>تم دمج <strong id="mergedFilesCount">0</strong> ملفات</p>
+                            <p>الحجم النهائي: <strong id="mergedFileSize">0 MB</strong></p>
+                        </div>
+
+                        <button class="btn btn-success" id="downloadMergedBtn">
+                            ⬇ تحميل الملف المدمج
+                        </button>
+
+                        <button class="btn btn-secondary" id="resetMergeBtn">
+                            دمج ملفات أخرى
                         </button>
                     </div>
                 </div>
             </div>
         </main>
 
-        <footer>
-            <p>جميع الملفات تُحذف تلقائياً بعد 24 ساعة</p>
-            <p>🔒 معالجة آمنة ومحمية</p>
-        </footer>
+        <!-- إعلان Google AdSense - وسط -->
+        <div class="ad-container ad-middle">
+            <!-- ضع كود AdSense هنا -->
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                 data-ad-slot="XXXXXXXXXX"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+        </div>
+    </div>
+
+    <!-- إعلان Google AdSense - سفلي -->
+    <div class="ad-container ad-bottom">
+        <!-- ضع كود AdSense هنا -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+             data-ad-slot="XXXXXXXXXX"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
     </div>
 
     <script src="js/app.js"></script>

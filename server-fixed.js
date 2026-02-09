@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 8080;
 
 // CORS Configuration - Allow requests from GitHub Pages and everywhere
 const corsOptions = {
-    origin: '*',
+    origin: '*', // Allow all origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -37,6 +37,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+app.use(express.static('public'));
 
 // إنشاء المجلدات المطلوبة
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -49,7 +50,7 @@ if (!fs.existsSync(downloadsDir)) {
     fs.mkdirSync(downloadsDir, { recursive: true });
 }
 
-// إعدادات Multer لرفع ملف واحد (للضغط)
+// إعدادات Multer لرفع الملفات
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadsDir);
@@ -74,42 +75,24 @@ const upload = multer({
     }
 });
 
-// إعدادات Multer لرفع ملفات متعددة (للدمج)
-const mergeStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = uuidv4() + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
-});
-
-const mergeUpload = multer({
-    storage: mergeStorage,
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/pdf') {
-            cb(null, true);
-        } else {
-            cb(new Error('فقط ملفات PDF مسموح بها'));
-        }
-    },
-    limits: {
-        fileSize: 50 * 1024 * 1024, // حد أقصى 50 ميجابايت للملف الواحد
-        files: 20 // حد أقصى 20 ملف
-    }
-});
-
 // دالة ضغط PDF باستخدام Ghostscript
 async function compressPDF(inputPath, outputPath, quality) {
+    // إعدادات جودة Ghostscript للضغط
+    // /screen: 72 dpi - جودة منخفضة جداً (أصغر حجم)
+    // /ebook: 150 dpi - جودة منخفضة (حجم صغير)
+    // /printer: 300 dpi - جودة متوسطة (حجم متوسط)
+    // /prepress: 300 dpi + الحفاظ على اللون - جودة عالية (حجم أكبر)
+    // /default: جودة جيدة مع ضغط معقول
+
     const qualitySettings = {
-        low: '/screen',
-        medium: '/ebook',
-        high: '/printer'
+        low: '/screen',      // 72 dpi - أصغر حجم
+        medium: '/ebook',    // 150 dpi - توازن جيد
+        high: '/printer'     // 300 dpi - جودة عالية
     };
 
     const setting = qualitySettings[quality] || qualitySettings.medium;
 
+    // أمر Ghostscript للضغط
     const command = `gs -sDEVICE=pdfwrite \
         -dCompatibilityLevel=1.4 \
         -dPDFSETTINGS=${setting} \
@@ -130,6 +113,7 @@ async function compressPDF(inputPath, outputPath, quality) {
         throw new Error('فشل في ضغط الملف');
     }
 
+    // إرجاع معلومات عن الملفات
     const originalSize = fs.statSync(inputPath).size;
     const compressedSize = fs.statSync(outputPath).size;
     const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(2);
@@ -138,32 +122,6 @@ async function compressPDF(inputPath, outputPath, quality) {
         originalSize,
         compressedSize,
         compressionRatio
-    };
-}
-
-// دالة دمج ملفات PDF باستخدام Ghostscript
-async function mergePDFs(inputPaths, outputPath) {
-    // بناء أمر Ghostscript لدمج الملفات
-    const inputFiles = inputPaths.map(p => `"${p}"`).join(' ');
-
-    const command = `gs -sDEVICE=pdfwrite \
-        -dNOPAUSE -dQUIET -dBATCH \
-        -sOutputFile="${outputPath}" \
-        ${inputFiles}`;
-
-    try {
-        await execAsync(command);
-    } catch (error) {
-        console.error('Ghostscript merge error:', error);
-        throw new Error('فشل في دمج الملفات');
-    }
-
-    // حساب حجم الملف المدمج
-    const mergedSize = fs.statSync(outputPath).size;
-
-    return {
-        mergedSize,
-        fileCount: inputPaths.length
     };
 }
 
@@ -197,46 +155,12 @@ app.post('/api/compress', upload.single('pdf'), async (req, res) => {
     }
 });
 
-// API Endpoint لدمج PDF
-app.post('/api/merge', mergeUpload.array('pdfs', 20), async (req, res) => {
-    try {
-        if (!req.files || req.files.length < 2) {
-            return res.status(400).json({ error: 'يجب رفع ملفين على الأقل' });
-        }
-
-        const inputPaths = req.files.map(file => file.path);
-        const outputFilename = `merged_${uuidv4()}.pdf`;
-        const outputPath = path.join(downloadsDir, outputFilename);
-
-        // دمج الملفات
-        const result = await mergePDFs(inputPaths, outputPath);
-
-        // حذف الملفات الأصلية بعد المعالجة
-        inputPaths.forEach(filePath => {
-            try {
-                fs.unlinkSync(filePath);
-            } catch (err) {
-                console.error('Error deleting file:', err);
-            }
-        });
-
-        res.json({
-            success: true,
-            downloadUrl: `/api/download/${outputFilename}`,
-            ...result
-        });
-
-    } catch (error) {
-        console.error('خطأ في الدمج:', error);
-        res.status(500).json({ error: 'فشل في دمج الملفات' });
-    }
-});
-
-// API Endpoint لتحميل الملفات
+// API Endpoint لتحميل الملف المضغوط
 app.get('/api/download/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(downloadsDir, filename);
 
+    // Add CORS headers for download endpoint
     res.header('Access-Control-Allow-Origin', '*');
 
     if (fs.existsSync(filePath)) {
@@ -246,38 +170,30 @@ app.get('/api/download/:filename', (req, res) => {
     }
 });
 
-// Endpoint لحذف الملفات القديمة
+// Endpoint لحذف الملفات القديمة (يمكن استدعاؤه بشكل دوري)
 app.delete('/api/cleanup', (req, res) => {
     try {
         const files = fs.readdirSync(downloadsDir);
         const now = Date.now();
         const maxAge = 24 * 60 * 60 * 1000; // 24 ساعة
 
-        let deletedCount = 0;
         files.forEach(file => {
             const filePath = path.join(downloadsDir, file);
             const stats = fs.statSync(filePath);
 
             if (now - stats.mtimeMs > maxAge) {
                 fs.unlinkSync(filePath);
-                deletedCount++;
             }
         });
 
-        res.json({ success: true, message: `تم تنظيف ${deletedCount} ملف قديم` });
+        res.json({ success: true, message: 'تم تنظيف الملفات القديمة' });
     } catch (error) {
         res.status(500).json({ error: 'فشل في التنظيف' });
     }
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'PDF Tools API is running' });
 });
 
 // تشغيل الخادم
 app.listen(PORT, () => {
     console.log(`الخادم يعمل على http://localhost:${PORT}`);
     console.log(`CORS مفعّل - يقبل الطلبات من جميع المصادر`);
-    console.log(`الميزات المتاحة: ضغط PDF، دمج PDF`);
 });

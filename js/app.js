@@ -1,14 +1,18 @@
-// المتغيرات العامة
+// المتغيرات العامة - الضغط
 let selectedFile = null;
 let selectedQuality = 'medium';
 let downloadUrl = '';
+
+// المتغيرات العامة - الدمج
+let mergeFiles = [];
+let mergedDownloadUrl = '';
 
 // إعدادات API - عدل هذا الرابط عند النشر
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? ''  // localhost: استخدم المسار النسبي
     : 'https://ascii-advertising-asian-respected.trycloudflare.com';  // GitHub Pages: استخدم الخادم البعيد (HTTPS)
 
-// عناصر DOM
+// عناصر DOM - الضغط
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const selectFileBtn = document.getElementById('selectFileBtn');
@@ -29,6 +33,28 @@ const savedPercentage = document.getElementById('savedPercentage');
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
 
+// عناصر DOM - الدمج
+const mergeUploadArea = document.getElementById('mergeUploadArea');
+const mergeFilesInput = document.getElementById('mergeFilesInput');
+const selectMergeFilesBtn = document.getElementById('selectMergeFilesBtn');
+const mergeFilesList = document.getElementById('mergeFilesList');
+const filesCount = document.getElementById('filesCount');
+const filesListContainer = document.getElementById('filesListContainer');
+const mergeBtn = document.getElementById('mergeBtn');
+const clearMergeFilesBtn = document.getElementById('clearMergeFilesBtn');
+const mergeProgressSection = document.getElementById('mergeProgressSection');
+const mergeProgressFill = document.getElementById('mergeProgressFill');
+const mergeProgressText = document.getElementById('mergeProgressText');
+const mergeResultSection = document.getElementById('mergeResultSection');
+const mergedFilesCount = document.getElementById('mergedFilesCount');
+const mergedFileSize = document.getElementById('mergedFileSize');
+const downloadMergedBtn = document.getElementById('downloadMergedBtn');
+const resetMergeBtn = document.getElementById('resetMergeBtn');
+
+// عناصر DOM - التبويبات
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
 // دوال مساعدة
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -37,6 +63,24 @@ function formatBytes(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
+
+// ==================== التبويبات ====================
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // إزالة active من جميع الأزرار والمحتويات
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        // إضافة active للزر المختار
+        btn.classList.add('active');
+
+        // إظهار المحتوى المناسب
+        const tabName = btn.dataset.tab;
+        document.getElementById(tabName + 'Tab').classList.add('active');
+    });
+});
+
+// ==================== وظائف الضغط ====================
 
 // التعامل مع رفع الملفات
 selectFileBtn.addEventListener('click', () => {
@@ -86,7 +130,7 @@ function handleFileSelect(file) {
     fileName.textContent = file.name;
     fileSize.textContent = formatBytes(file.size);
 
-    uploadArea.style.display = 'none';
+    uploadArea.parentElement.style.display = 'none';
     fileInfo.style.display = 'block';
     compressionOptions.style.display = 'block';
 }
@@ -98,7 +142,7 @@ removeFileBtn.addEventListener('click', () => {
     fileInfo.style.display = 'none';
     compressionOptions.style.display = 'none';
     resultSection.style.display = 'none';
-    uploadArea.style.display = 'block';
+    uploadArea.parentElement.style.display = 'block';
 });
 
 // اختيار مستوى الضغط
@@ -211,10 +255,209 @@ resetBtn.addEventListener('click', () => {
     downloadUrl = '';
 
     resultSection.style.display = 'none';
-    uploadArea.style.display = 'block';
+    uploadArea.parentElement.style.display = 'block';
     compressBtn.disabled = false;
 
     // إعادة تعيين التقدم
     progressFill.style.width = '0%';
     progressText.textContent = 'جاري الضغط... 0%';
+});
+
+// ==================== وظائف الدمج ====================
+
+// اختيار ملفات للدمج
+selectMergeFilesBtn.addEventListener('click', () => {
+    mergeFilesInput.click();
+});
+
+mergeFilesInput.addEventListener('change', (e) => {
+    handleMergeFilesSelect(e.target.files);
+});
+
+mergeUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    mergeUploadArea.classList.add('dragover');
+});
+
+mergeUploadArea.addEventListener('dragleave', () => {
+    mergeUploadArea.classList.remove('dragover');
+});
+
+mergeUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    mergeUploadArea.classList.remove('dragover');
+
+    if (e.dataTransfer.files.length > 0) {
+        handleMergeFilesSelect(e.dataTransfer.files);
+    }
+});
+
+function handleMergeFilesSelect(files) {
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+        // التحقق من نوع الملف
+        if (file.type !== 'application/pdf') {
+            alert(`الملف "${file.name}" ليس ملف PDF`);
+            return;
+        }
+
+        // التحقق من التكرار
+        if (mergeFiles.some(f => f.name === file.name && f.size === file.size)) {
+            alert(`الملف "${file.name}" مضاف بالفعل`);
+            return;
+        }
+
+        // إضافة الملف للقائمة
+        mergeFiles.push(file);
+    });
+
+    updateMergeFilesList();
+}
+
+function updateMergeFilesList() {
+    if (mergeFiles.length === 0) {
+        mergeFilesList.style.display = 'none';
+        mergeUploadArea.parentElement.style.display = 'block';
+        return;
+    }
+
+    mergeUploadArea.parentElement.style.display = 'none';
+    mergeFilesList.style.display = 'block';
+    filesCount.textContent = mergeFiles.length;
+
+    // عرض الملفات
+    filesListContainer.innerHTML = mergeFiles.map((file, index) => `
+        <div class="file-item">
+            <div class="file-item-number">${index + 1}</div>
+            <div class="file-item-info">
+                <div class="file-item-name">${file.name}</div>
+                <div class="file-item-size">${formatBytes(file.size)}</div>
+            </div>
+            <button class="file-item-remove" onclick="removeMergeFile(${index})">✕</button>
+        </div>
+    `).join('');
+}
+
+// إزالة ملف من قائمة الدمج
+window.removeMergeFile = function(index) {
+    mergeFiles.splice(index, 1);
+    updateMergeFilesList();
+};
+
+// مسح جميع الملفات
+clearMergeFilesBtn.addEventListener('click', () => {
+    mergeFiles = [];
+    mergeFilesInput.value = '';
+    updateMergeFilesList();
+});
+
+// عملية الدمج
+mergeBtn.addEventListener('click', async () => {
+    if (mergeFiles.length < 2) {
+        alert('يجب اختيار ملفين على الأقل للدمج');
+        return;
+    }
+
+    // إخفاء قائمة الملفات وعرض التقدم
+    mergeFilesList.style.display = 'none';
+    mergeProgressSection.style.display = 'block';
+
+    // تعطيل الأزرار
+    mergeBtn.disabled = true;
+    clearMergeFilesBtn.disabled = true;
+
+    try {
+        // إنشاء FormData
+        const formData = new FormData();
+        mergeFiles.forEach(file => {
+            formData.append('pdfs', file);
+        });
+
+        // محاكاة التقدم
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 90) {
+                clearInterval(progressInterval);
+                progress = 90;
+            }
+            updateMergeProgress(progress);
+        }, 500);
+
+        // إرسال الطلب للخادم
+        const url = `${API_BASE_URL}/api/merge`;
+        console.log('Sending merge request to:', url);
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        // إكمال التقدم
+        clearInterval(progressInterval);
+        updateMergeProgress(100);
+
+        if (result.success) {
+            // عرض النتيجة
+            setTimeout(() => {
+                mergeProgressSection.style.display = 'none';
+                displayMergeResult(result);
+            }, 500);
+        } else {
+            throw new Error(result.error || 'فشل في دمج الملفات');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء دمج الملفات: ' + error.message);
+
+        // إعادة العرض
+        mergeProgressSection.style.display = 'none';
+        mergeFilesList.style.display = 'block';
+        mergeBtn.disabled = false;
+        clearMergeFilesBtn.disabled = false;
+    }
+});
+
+function updateMergeProgress(percent) {
+    const roundedPercent = Math.min(100, Math.max(0, Math.round(percent)));
+    mergeProgressFill.style.width = roundedPercent + '%';
+    mergeProgressText.textContent = `جاري الدمج... ${roundedPercent}%`;
+}
+
+function displayMergeResult(result) {
+    mergedFilesCount.textContent = mergeFiles.length;
+    mergedFileSize.textContent = formatBytes(result.mergedSize);
+    mergedDownloadUrl = result.downloadUrl;
+
+    mergeResultSection.style.display = 'block';
+}
+
+// تحميل الملف المدمج
+downloadMergedBtn.addEventListener('click', () => {
+    if (mergedDownloadUrl) {
+        const fullUrl = mergedDownloadUrl.startsWith('http')
+            ? mergedDownloadUrl
+            : `${API_BASE_URL}${mergedDownloadUrl}`;
+        window.location.href = fullUrl;
+    }
+});
+
+// إعادة تعيين الدمج
+resetMergeBtn.addEventListener('click', () => {
+    mergeFiles = [];
+    mergeFilesInput.value = '';
+    mergedDownloadUrl = '';
+
+    mergeResultSection.style.display = 'none';
+    mergeUploadArea.parentElement.style.display = 'block';
+    mergeBtn.disabled = false;
+    clearMergeFilesBtn.disabled = false;
+
+    // إعادة تعيين التقدم
+    mergeProgressFill.style.width = '0%';
+    mergeProgressText.textContent = 'جاري الدمج... 0%';
 });
